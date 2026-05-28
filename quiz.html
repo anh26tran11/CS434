@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Kỹ thuật phần mềm</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .option-label input:checked + span { border-color: #3b82f6; background-color: #eff6ff; }
+        .correct-answer span { border-color: #22c55e !important; background-color: #f0fdf4 !important; color: #166534 !important; font-weight: 600; }
+        .wrong-answer span { border-color: #ef4444 !important; background-color: #fef2f2 !important; color: #991b1b !important; }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 p-3 md:p-8">
+
+    <div class="max-w-4xl mx-auto bg-white p-4 md:p-10 rounded-xl shadow-lg border border-gray-100">
+        <h1 class="text-2xl md:text-3xl font-bold text-center text-blue-700 mb-6 md:mb-8">Trắc nghiệm: Kỹ thuật phần mềm</h1>
+        
+        <div id="quiz-container" class="space-y-6 md:space-y-8">
+        </div>
+        
+        <div id="button-container" class="mt-6 md:mt-10 flex justify-center border-t pt-6 md:pt-8 w-full">
+            <button type="button" id="submit-btn" class="w-full md:w-auto bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-10 rounded-lg shadow-md transition duration-200 text-base md:text-lg">
+                Nộp Bài
+            </button>
+            <button type="button" id="next-btn" class="hidden w-full md:w-auto bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-10 rounded-lg shadow-md transition duration-200 text-base md:text-lg">
+                Tiếp theo
+            </button>
+        </div>
+
+        <div id="result" class="hidden mt-8 p-6 bg-green-50 border border-green-200 text-green-800 rounded-lg text-center font-bold text-2xl">
+            Điểm của bạn: <span id="score"></span>/60
+        </div>
+    </div>
+
+    <script>
+        // Đáp án đã được chuẩn hoá theo thứ tự 1-60 (0-indexed: A=0, B=1, C=2, D=3)
+        const answerKeys = [
+            1, 0, 1, 2, 1, 2, 1, 2, 2, 1, 2, 2, 2, 2, 2, 1, 1, 1, 1, 1, 
+            2, 2, 2, 2, 1, 2, 1, 2, 1, 2, 3, 0, 1, 2, 2, 0, 2, 2, 3, 2, 
+            0, 2, 2, 0, 3, 0, 3, 0, 3, 2, 3, 3, 2, 3, 3, 0, 0, 3, 0, 0
+        ];
+
+        // Chuỗi dữ liệu thô toàn bộ câu hỏi và đáp án
+        const rawData = `
+1. Trong vòng đời phát triển phần mềm, giai đoạn nào chuyển các yêu cầu đã phân tích thành thiết kế kỹ thuật của hệ thống?|A. Phân tích yêu cầu|B. Thiết kế hệ thống|C. Bảo trì phần mềm|D. Triển khai hệ thống
+2. Trong Scrum, vai trò nào chịu trách nhiệm đảm bảo giá trị sản phẩm và đại diện cho khách hàng?|A. Product Owner|B. Scrum Master|C. Developer|D. Tester
+3. Tài liệu nào mô tả các kịch bản người dùng sử dụng hệ thống để thực hiện một chức năng?|A. Class Diagram|B. Use Case|C. Test Report|D. Deployment Diagram
+4. Hoạt động nào sau đây thuộc giai đoạn phát triển chứ không phải giai đoạn phân tích hệ thống?|A. Thu thập yêu cầu|B. Phân tích nghiệp vụ|C. Lập trình chức năng|D. Xây dựng Use Case
+5. Lợi ích quan trọng của việc thực hiện kiểm thử ngay từ giai đoạn đầu của dự án là gì?|A. Giảm tài liệu dự án|B. Phát hiện lỗi sớm và giảm chi phí sửa chữa|C. Tăng thời gian phát triển|D. Không cần kiểm thử cuối cùng
+6. Sơ đồ UML nào được dùng để biểu diễn các bước xử lý hoặc quy trình hoạt động của hệ thống?|A. Sơ đồ lớp|B. Sơ đồ tuần tự|C. Sơ đồ hoạt động|D. Sơ đồ thành phần
+7. Trong Scrum, cuộc họp Sprint Review nhằm mục đích gì?|A. Phân công công việc cho Sprint mới|B. Trình bày sản phẩm đã hoàn thành và nhận phản hồi|C. Kiểm thử phần mềm|D. Viết tài liệu kỹ thuật
+8. Nền tảng nào phổ biến để quản lý và lưu trữ mã nguồn trong phát triển phần mềm hiện nay?|A. Figma|B. Trello|C. GitHub|D. Excel
+9. Loại kiểm thử nào xác nhận phần mềm đáp ứng đúng yêu cầu của khách hàng trước khi bàn giao?|A. Unit Testing|B. Integration Testing|C. Acceptance Testing|D. Smoke Testing
+10. Một hạn chế thường gặp của mô hình Waterfall là gì?|A. Không có tài liệu|B. Khó thay đổi khi yêu cầu phát sinh|C. Không có giai đoạn kiểm thử|D. Không cần lập kế hoạch
+11. Trong Scrum, hoạt động Backlog Refinement được thực hiện nhằm mục đích gì?|A. Viết test case|B. Kiểm thử hệ thống|C. Làm rõ và cập nhật các mục trong Product Backlog|D. Triển khai hệ thống
+12. Công cụ nào sau đây thường được dùng để thiết kế sơ đồ hệ thống trực tuyến?|A. Notepad|B. Word|C. Draw.io|D. Chrome
+13. Regression Testing được thực hiện khi nào trong quá trình phát triển phần mềm?|A. Khi bắt đầu dự án|B. Khi phân tích yêu cầu|C. Khi hệ thống có thay đổi hoặc sửa lỗi|D. Khi thiết kế giao diện
+14. DevOps hướng tới mục tiêu nào trong phát triển phần mềm?|A. Giảm vai trò lập trình viên|B. Tách rời phát triển và vận hành|C. Tăng tốc độ phát triển và triển khai phần mềm|D. Giảm tương tác trong nhóm
+15. Sau khi hệ thống được triển khai, tài liệu nào giúp người dùng hiểu cách sử dụng phần mềm?|A. Design Document|B. Test Case|C. User Manual|D. Source Code
+16. Hoạt động nào giúp nhóm phát triển hiểu rõ yêu cầu và vấn đề của người sử dụng hệ thống?|A. Kiểm thử phần mềm|B. Thu thập và phân tích yêu cầu|C. Triển khai phần mềm|D. Bảo trì hệ thống
+17. Tài liệu nào mô tả đầy đủ các chức năng, ràng buộc và yêu cầu của hệ thống phần mềm?|A. User Guide|B. Software Requirements Specification (SRS)|C. Source Code|D. Test Plan
+18. Trong Scrum, ai là người hỗ trợ nhóm và loại bỏ các trở ngại trong quá trình phát triển?|A. Product Owner|B. Scrum Master|C. Developer|D. Stakeholder
+19. Sprint Planning trong Scrum được tổ chức để làm gì?|A. Kiểm thử hệ thống|B. Lập kế hoạch công việc cho Sprint tiếp theo|C. Đánh giá sản phẩm|D. Triển khai phần mềm
+20. Sơ đồ UML nào mô tả thứ tự tương tác giữa các đối tượng theo dòng thời gian?|A. Sơ đồ lớp|B. Sơ đồ tuần tự|C. Sơ đồ Use Case|D. Sơ đồ hoạt động
+21. System Testing thường được tiến hành ở giai đoạn nào?|A. Trước khi viết mã|B. Sau khi kiểm thử đơn vị|C. Khi toàn bộ hệ thống đã được tích hợp|D. Sau khi bàn giao cho khách hàng
+22. Công cụ nào thường dùng để quản lý tiến độ và backlog trong dự án Agile?|A. Paint|B. PowerPoint|C. Jira|D. Excel
+23. Ưu điểm nổi bật của mô hình phát triển lặp (Iterative Model) là gì?|A. Không cần phản hồi người dùng|B. Chỉ phát triển một lần duy nhất|C. Cho phép cải tiến sản phẩm qua từng vòng lặp|D. Không cần kiểm thử
+24. Kiểm thử nào sau đây thuộc nhóm kiểm thử phi chức năng?|A. Unit Testing|B. Integration Testing|C. Performance Testing|D. Acceptance Testing
+25. Trong Scrum, Product Backlog là gì?|A. Danh sách lỗi phần mềm|B. Danh sách các tính năng và yêu cầu của sản phẩm|C. Danh sách thành viên dự án|D. Kế hoạch kiểm thử
+26. Công cụ nào hỗ trợ thiết kế sơ đồ UML trong phát triển phần mềm?|A. Excel|B. Word|C. StarUML|D. Chrome
+27. Mục tiêu chính của Regression Testing là gì?|A. Kiểm tra cú pháp chương trình|B. Đảm bảo chức năng cũ vẫn hoạt động sau khi cập nhật|C. Kiểm thử giao diện|D. Thu thập yêu cầu
+28. Hoạt động nào sau đây không thuộc quy trình kiểm thử phần mềm?|A. Thiết kế test case|B. Thực thi test case|C. Thu thập yêu cầu người dùng|D. Báo cáo lỗi
+29. Trong DevOps, Continuous Integration (CI) giúp đạt mục tiêu nào?|A. Triển khai phần mềm trực tiếp cho người dùng|B. Tích hợp mã nguồn thường xuyên để phát hiện lỗi sớm|C. Quản lý tài liệu|D. Thiết kế giao diện
+30. Sau khi phần mềm được đưa vào sử dụng, hoạt động nào đảm bảo hệ thống hoạt động ổn định lâu dài?|A. Thiết kế lại kiến trúc|B. Viết lại chương trình|C. Bảo trì và hỗ trợ người dùng|D. Thu thập yêu cầu ban đầu
+31. Mục tiêu của tái cấu trúc là gì?|A. Cải tiến tính dễ hiểu của đoạn mã|B. Cải tiến cấu trúc đoạn mã|C. Loại bỏ những đoạn mã không cần thiết|D. Tất cả ý trên
+32. Tại sao chúng ta cần làm việc nhóm?|A. Các dự án phần mềm quá lớn; đòi hỏi tập kỹ năng và vai trò|B. Các lập trình viên có kinh nghiệm sẽ dạy cho các lập trình viên ít kinh nghiệm|C. Để đánh giá|D. Để ngăn chặn lỗi
+33. Phát biểu nào sau đây KHÔNG là tuyên ngôn của Agile?|A. Phản hồi với thay đổi hơn là bám sát kế hoạch.|B. Quy trình và công cụ hơn là cá nhân và tương tác.|C. Cộng tác với khách hàng hơn là đàm phán hợp đồng.|D. Phần mềm chạy tốt hơn là tài liệu đầy đủ.
+34. Nếu bạn muốn biết Mô đun 1 hoạt động cùng với Mô đun 2 có đúng hay không. Bạn sẽ thực hiện mức độ kiểm thử nào?|A. Kiểm thử đơn vị|B. Kiểm thử hệ thống|C. Kiểm thử tích hợp|D. Kiểm thử chấp nhận
+35. Phát biểu nào SAI khi nói về tái cấu trúc|A. Tái cấu trúc không sửa lỗi, khuyết điểm|B. Tái cấu trúc không thêm chức năng mới|C. Tái cấu trúc không làm đoạn mã tốt hơn|D. Tái cấu trúc là kỹ thuật để cải thiện đoạn mã
+36. Các mức độ kiểm thử được thực hiện theo thứ tự nào dưới đây?|A. Kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử hệ thống, kiểm thử chấp nhận|B. Kiểm thử tích hợp, kiểm thử đơn vị, kiểm thử hệ thống, kiểm thử chấp nhận|C. Kiểm thử đơn vị, kiểm thử hệ thống, kiểm thử tích hợp, kiểm thử chấp nhận|D. Kiểm thử đơn vị, kiểm thử tích hợp, kiểm thử chấp nhận
+37. Quy trình kiểm tra (inspection process) gồm mấy giai đoạn?|A. 4|B. 5|C. 6|D. 7
+38. Trong quy trình kiểm tra (inspection process), vai trò nào chịu trách nhiệm sắp xếp các cuộc họp?|A. Tác giả (author)|B. Người kiểm tra (inspector)|C. Người điều phối (moderator)|D. Người viết (recorder)
+39. Critical Path là:|A. Đường tới hạn|B. Đường găng|C. Đường có tổng thời gian dài nhất|D. Tất cả đều đúng
+40. Phương pháp phát triển phần mềm linh hoạt Agile có bao nhiêu nguyên tắc?|A. 10|B. 11|C. 12|D. 13
+41. Ý nghĩa cơ bản của đường găng:|A. Cho biết thời gian tối thiểu để hoàn thành dự án|B. Cho biết thời gian tối đa để hoàn thành dự án|C. Cho biết mối quan hệ phụ thuộc giữa các công việc|D. Cho biết tổng chi phí mà doanh nghiệp phải trả
+42. Kiểm thử hệ thống (System testing) được thực hiện ngay sau:|A. Kiểm thử đơn vị|B. Kiểm thử chấp nhận|C. Kiểm thử tích hợp|D. Kiểm thử module
+43. Các hoạt động phát triển phần mềm theo Scrum diễn ra trong một chu trình ngắn và lặp lại, gọi là gì?|A. Increment|B. Iteration|C. Sprint|D. Cycle
+44. Mục đích cuộc họp Daily Scrum là gì?|A. Để các thành viên trong đội Scrum chia sẻ với nhau tiến độ công việc và khó khăn nếu có|B. Để Scrum Master giao việc cho các Developers|C. Để Developers báo cáo công việc cho Scrum Master|D. Để Developers báo cáo công việc cho Product Owner
+45. Chọn phát biểu SAI về WBS|A. WBS cung cấp cơ sở để lập kế hoạch và quản lý các lịch biểu, chi phí và những biến đổi dự án|B. WBS là cây phân cấp các nhóm công việc cần thực hiện trong dự án, nó xác định phạm vi tổng thể của dự án|C. WBS là cần thiết khi quản lý dự án IT|D. WBS là không cần thiết khi quản lý dự án IT
+46. Quy trình phần mềm mà trong đó tất cả các hoạt động được lên kế hoạch trước và tiến độ được đo lường dựa trên kế hoạch này được gọi là quy trình gì?|A. Plan-driven process|B. Agile process|C. Component-based process|D. Reuse-oriented process
+47. Mô hình thác nước (Waterfall model) là cách tiếp cận TỐT NHẤT khi triển khai các phần mềm như thế nào?|A. Khi muốn thêm một số tính năng mới vào hệ thống|B. Khi hệ thống có yêu cầu không ổn định|C. Khi hệ thống phần mềm có quy mô nhỏ và yêu cầu không rõ ràng|D. Khi hệ thống phần mềm lớn và được phát triển bởi các đội nhóm làm việc ở nhiều địa điểm khác nhau
+48. Từng đơn vị riêng lẻ của chương trình hoặc các lớp đối tượng sẽ được kiểm tra. Loại kiểm thử này tập trung vào kiểm tra chức năng của các đối tượng và phương thức hoạt động của chúng. Loại kiểm thử này được gọi là gì?|A. Kiểm thử các đơn vị - Unit testing|B. Kiểm thử các phân hệ - Component testing|C. Kiểm thử hệ thống - System testing|D. Kiểm thử chấp nhận - Acceptance testing
+49. Nguyên tắc TỐT NHẤT của việc lập lịch trình cho dự án phần mềm (Project Scheduling) là gì?|A. Tất cả các tác vụ được tổ chức thực hiện đồng thời và song song với nhau|B. Tối đa hóa sự phụ thuộc giữa các tác vụ để tránh sự chậm trễ do có một tác vụ đang chờ một tác vụ khác hoàn thành|C. Tất cả các tác vụ đều được sắp xếp độc lập và không phụ thuộc lẫn nhau|D. Giảm thiểu sự phụ thuộc giữa các tác vụ để tránh sự chậm trễ do có một tác vụ đang chờ một tác vụ khác hoàn thành
+50. Thông thường thì thứ tự của các hoạt động kiểm thử phần mềm được diễn ra như thế nào?|A. 1 => 2 => 3 => 4|B. 4 => 3 => 2 => 1|C. 2 => 1 => 3 => 4|D. 4 => 1 => 3 => 2
+51. Mô hình quy trình phần mềm nào dựa trên việc tái sử dụng một cách có hệ thống, trong đó hệ thống phần mềm sẽ được tích hợp từ các thành phần có sẵn hoặc từ các thành phần thương mại hóa COTS?|A. Waterfall model|B. Incremental model|C. Reuse-oriented model|D. Component-based model
+52. Phát biểu nào là SAI khi nói về Kiểm thử phần mềm (Testing)|A. Kiểm thử nhằm kiểm tra những gì chương trình dự định sẽ thực hiện để phát hiện lỗi|B. Khi kiểm thử, ta cho chạy thử chương trình sử dụng bộ dữ liệu nhân tạo|C. Khi kiểm thử, ta phát hiện sự bất thường trong các thuộc tính chức năng và phi chức năng|D. Kiểm thử nhằm mục đích tìm ra tất cả các khuyết điểm và lỗi của hệ thống
+53. Chuỗi các hoạt động nào sau đây là ĐÚNG khi nói về quy trình phần mềm trong mô hình thác nước (Waterfall model)?|A. 1 => 4 => 3 => 2 => 5|B. 1 => 2 => 3 => 4 => 5|C. 2 => 1 => 4 => 3 => 5|D. 2 => 3 => 4 => 1 => 5
+54. Phát biểu nào ĐÚNG nhất khi nói về Critical Path?|A. Người quản lý dự án không cần quan tâm đến Critical Path|B. Không cần phân bổ những người có kinh nghiệm thực hiện nhiệm vụ trên Critical Path|C. Sự chậm trễ ở các hoạt động trên Critical Path không gây chậm trễ toàn bộ dự án|D. Người quản lý dự án nên phân bổ những người có kinh nghiệm thực hiện các nhiệm vụ trên Critical Path
+55. Điều nào trong các điều sau đây là SAI khi nói về các nguyên tắc cơ bản trong kỹ thuật phần mềm|A. Hệ thống nên được phát triển thông qua một quy trình được quản lý chặt chẽ|B. Độ tin cậy và hiệu suất hoạt động rất quan trọng đối với tất cả các loại hệ thống|C. Hiểu và quản lý các yêu cầu và đặc điểm kỹ thuật của phần mềm là rất quan trọng|D. Không nên tái sử dụng các thành phần phần mềm đã được phát triển trước đây mà nên viết mới hoàn toàn
+56. Trong quá trình phát triển, việc các thành phần phần mềm dự định tái sử dụng khi tích hợp lại phát sinh lỗi không theo kế hoạch gọi là rủi ro gì?|A. Rủi ro về công nghệ|B. Rủi ro về con người|C. Rủi ro về tổ chức|D. Rủi ro về công cụ
+57. Quy trình quản lý rủi ro diễn ra theo trình tự các bước như thế nào? (1) Phân tích (2) Lập kế hoạch (3) Nhận diện (4) Giám sát|A. (3) – (1) – (2) – (4)|B. (4) – (2) – (3) – (1)|C. (1) – (2) – (3) – (4)|D. (3) – (2) – (1) – (4)
+58. Loại kiểm thử nào sau đây không thuộc loại kiểm thử trong giai đoạn phát triển phần mềm (Software Development)?|A. Kiểm thử các đơn vị - Unit testing|B. Kiểm thử các phân hệ - Component testing|C. Kiểm thử hệ thống - System testing|D. Kiểm thử chấp nhận - Acceptance testing
+59. Đánh giá khả năng một rủi ro nào đó có thể xảy ra cùng hậu quả và mức độ nghiêm trọng mà rủi ro này gây ra cho dự án được gọi là bước?|A. Phân tích rủi ro (Risk analysis)|B. Lập kế hoạch rủi ro (Risk planning)|C. Nhận diện rủi ro (Risk indentification)|D. Giám sát rủi ro (Risk monitoring)
+60. Phát biểu nào là SAI khi nói về trách nhiệm nghề nghiệp của các kĩ sư phần mềm|A. Kỹ sư phần mềm chỉ cần tập trung vào việc áp dụng các kỹ năng và kỹ thuật để giải quyết công việc|B. Phải cư xử một cách trung thực và có trách nhiệm đạo đức|C. Nên tôn trọng tính bảo mật của công ty hoặc khách hàng|D. Nên am hiểu luật pháp nước sở tại về việc sử dụng tài sản trí tuệ
+        `;
+
+        // Parse dữ liệu
+        const questions = rawData.trim().split('\n').map((line, index) => {
+            const parts = line.split('|');
+            return {
+                id: index,
+                question: parts[0],
+                options: [parts[1], parts[2], parts[3], parts[4]],
+                answer: answerKeys[index]
+            };
+        });
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let isAnswered = false;
+
+        const container = document.getElementById('quiz-container');
+        const submitBtn = document.getElementById('submit-btn');
+        const nextBtn = document.getElementById('next-btn');
+        const resultDiv = document.getElementById('result');
+        const scoreSpan = document.getElementById('score');
+
+        function renderQuestion() {
+            isAnswered = false;
+            const q = questions[currentQuestionIndex];
+            let optionsHtml = '';
+            
+            q.options.forEach((opt, optIndex) => {
+                optionsHtml += `
+                    <label class="option-label block relative cursor-pointer mb-3">
+                        <input type="radio" name="question-${currentQuestionIndex}" value="${optIndex}" class="peer sr-only">
+                        <span id="label-${currentQuestionIndex}-${optIndex}" class="block p-3 md:p-4 text-sm md:text-base border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                            ${opt}
+                        </span>
+                    </label>
+                `;
+            });
+
+            container.innerHTML = `
+                <div class="bg-white border rounded-xl p-4 md:p-5 shadow-sm" id="question-block-${currentQuestionIndex}">
+                    <h3 class="text-base md:text-lg font-bold text-gray-800 mb-3 md:mb-4">Câu ${currentQuestionIndex + 1}/${questions.length}: ${q.question.replace(/^\d+\.\s*/, '')}</h3>
+                    <div class="space-y-2">
+                        ${optionsHtml}
+                    </div>
+                </div>
+            `;
+
+            submitBtn.classList.remove('hidden');
+            nextBtn.classList.add('hidden');
+            
+            if (currentQuestionIndex === questions.length - 1) {
+                nextBtn.innerText = "Xem kết quả";
+            } else {
+                nextBtn.innerText = "Tiếp theo";
+            }
+        }
+
+        submitBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            if (isAnswered) return;
+
+            const q = questions[currentQuestionIndex];
+            const selected = document.querySelector(`input[name="question-${currentQuestionIndex}"]:checked`);
+            
+            if (!selected) {
+                alert("Vui lòng chọn một đáp án!");
+                return;
+            }
+
+            isAnswered = true;
+            const selectedVal = parseInt(selected.value);
+            
+            // Cấm chọn lại
+            document.querySelectorAll(`input[name="question-${currentQuestionIndex}"]`).forEach(input => {
+                input.disabled = true;
+            });
+
+            const correctId = `label-${currentQuestionIndex}-${q.answer}`;
+            const correctLabel = document.getElementById(correctId);
+            correctLabel.parentElement.classList.add('correct-answer');
+
+            if (selectedVal === q.answer) {
+                score++;
+            } else {
+                const wrongLabel = document.getElementById(`label-${currentQuestionIndex}-${selectedVal}`);
+                wrongLabel.parentElement.classList.add('wrong-answer');
+            }
+
+            submitBtn.classList.add('hidden');
+            nextBtn.classList.remove('hidden');
+        });
+
+        nextBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            
+            if (currentQuestionIndex < questions.length - 1) {
+                currentQuestionIndex++;
+                renderQuestion();
+            } else {
+                // Show result
+                container.innerHTML = '';
+                document.getElementById('button-container').classList.add('hidden');
+                scoreSpan.innerText = score;
+                resultDiv.classList.remove('hidden');
+            }
+        });
+
+        // Initial render
+        renderQuestion();
+    </script>
+</body>
+</html>
