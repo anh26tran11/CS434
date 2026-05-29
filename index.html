@@ -30,7 +30,7 @@
         </div>
 
         <div id="result" class="hidden mt-8 p-6 bg-green-50 border border-green-200 text-green-800 rounded-lg text-center font-bold text-2xl">
-            Điểm của bạn: <span id="score"></span>/60
+            Điểm của bạn: <span id="score"></span>/<span id="total-questions">60</span>
         </div>
     </div>
 
@@ -106,16 +106,45 @@
 60. Phát biểu nào là SAI khi nói về trách nhiệm nghề nghiệp của các kĩ sư phần mềm|A. Kỹ sư phần mềm chỉ cần tập trung vào việc áp dụng các kỹ năng và kỹ thuật để giải quyết công việc|B. Phải cư xử một cách trung thực và có trách nhiệm đạo đức|C. Nên tôn trọng tính bảo mật của công ty hoặc khách hàng|D. Nên am hiểu luật pháp nước sở tại về việc sử dụng tài sản trí tuệ
         `;
 
+        // Hàm xáo trộn mảng (Fisher-Yates shuffle)
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
         // Parse dữ liệu
         const questions = rawData.trim().split('\n').map((line, index) => {
             const parts = line.split('|');
+            
+            // Loại bỏ tiền tố A. B. C. D. ban đầu
+            const originalOptions = [
+                parts[1].replace(/^[A-D]\.\s*/, ''), 
+                parts[2].replace(/^[A-D]\.\s*/, ''), 
+                parts[3].replace(/^[A-D]\.\s*/, ''), 
+                parts[4].replace(/^[A-D]\.\s*/, '')
+            ];
+            
+            const correctAnswerText = originalOptions[answerKeys[index]];
+            
+            // Xáo trộn các lựa chọn
+            let shuffledOptions = [...originalOptions];
+            shuffleArray(shuffledOptions);
+            
+            // Tìm lại vị trí đáp án đúng sau khi xáo trộn
+            const newAnswerIndex = shuffledOptions.indexOf(correctAnswerText);
+            
             return {
                 id: index,
                 question: parts[0],
-                options: [parts[1], parts[2], parts[3], parts[4]],
-                answer: answerKeys[index]
+                options: shuffledOptions,
+                answer: newAnswerIndex
             };
         });
+
+        // Xáo trộn thứ tự các câu hỏi
+        shuffleArray(questions);
 
         let currentQuestionIndex = 0;
         let score = 0;
@@ -133,11 +162,12 @@
             let optionsHtml = '';
             
             q.options.forEach((opt, optIndex) => {
+                const letter = String.fromCharCode(65 + optIndex); // A, B, C, D
                 optionsHtml += `
                     <label class="option-label block relative cursor-pointer mb-3">
                         <input type="radio" name="question-${currentQuestionIndex}" value="${optIndex}" class="peer sr-only">
                         <span id="label-${currentQuestionIndex}-${optIndex}" class="block p-3 md:p-4 text-sm md:text-base border border-gray-200 rounded-lg text-gray-700 hover:bg-gray-50 transition">
-                            ${opt}
+                            <strong>${letter}.</strong> ${opt}
                         </span>
                     </label>
                 `;
@@ -213,6 +243,7 @@
         });
 
         // Initial render
+        document.getElementById('total-questions').innerText = questions.length;
         renderQuestion();
     </script>
 </body>
